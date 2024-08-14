@@ -10,13 +10,14 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use Revolution\Amazon\ProductAdvertising\AmazonClient;
 use Revolution\Amazon\ProductAdvertising\Contracts\Factory;
+use Revolution\Amazon\ProductAdvertising\Facades\AmazonProduct;
 
 class AmazonTest extends TestCase
 {
     /**
      * @var AmazonClient
      */
-    protected $amazon;
+    protected AmazonClient $amazon;
 
     public function setUp(): void
     {
@@ -56,7 +57,7 @@ class AmazonTest extends TestCase
     {
         $this->setClientHandler(file_get_contents(__DIR__.'/stubs/BrowseNodeResult.json'));
 
-        $response = $this->amazon->browse('1');
+        $response = $this->amazon->browse(node: '1');
 
         $this->assertArrayHasKey('BrowseNodesResult', $response);
     }
@@ -65,7 +66,7 @@ class AmazonTest extends TestCase
     {
         $this->setClientHandler(file_get_contents(__DIR__.'/stubs/ItemsResult.json'));
 
-        $response = $this->amazon->item('1');
+        $response = $this->amazon->item(asin: '1');
 
         $this->assertArrayHasKey('ItemsResult', $response);
     }
@@ -74,7 +75,7 @@ class AmazonTest extends TestCase
     {
         $this->setClientHandler(file_get_contents(__DIR__.'/stubs/ItemsResult.json'));
 
-        $response = $this->amazon->items(['1']);
+        $response = $this->amazon->items(asin: ['1']);
 
         $this->assertArrayHasKey('ItemsResult', $response);
     }
@@ -83,7 +84,7 @@ class AmazonTest extends TestCase
     {
         $this->setClientHandler(file_get_contents(__DIR__.'/stubs/SearchResult.json'));
 
-        $response = $this->amazon->search('All', 'keyword', 1);
+        $response = $this->amazon->search(category: 'All', keyword: 'keyword', page: 1);
 
         $this->assertArrayHasKey('SearchResult', $response);
     }
@@ -92,16 +93,16 @@ class AmazonTest extends TestCase
     {
         $this->setClientHandler(file_get_contents(__DIR__.'/stubs/VariationsResult.json'));
 
-        $response = $this->amazon->variations('1', 1);
+        $response = $this->amazon->variations(asin: '1', page: 1);
 
         $this->assertArrayHasKey('VariationsResult', $response);
     }
 
     public function testIdType()
     {
-        $this->amazon->setIdType('EAN');
+        $this->amazon->setIdType(idType: 'EAN');
 
-        $this->assertEquals($this->amazon->getIdType(), 'EAN');
+        $this->assertEquals('EAN', $this->amazon->getIdType());
     }
 
     public function testMacro()
@@ -128,7 +129,7 @@ class AmazonTest extends TestCase
             }
         );
 
-        $response = $this->amazon->item('1');
+        $response = $this->amazon->item(asin: '1');
 
         $this->assertTrue($this->amazon->hasHook('item'));
     }
@@ -158,5 +159,12 @@ class AmazonTest extends TestCase
         );
 
         $this->assertInstanceOf(DefaultApi::class, $amazon->api());
+    }
+
+    public function testFacade()
+    {
+        AmazonProduct::shouldReceive('browse')->andReturn([]);
+
+        $this->assertSame([], AmazonProduct::browse('1'));
     }
 }
